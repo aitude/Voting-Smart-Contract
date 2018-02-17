@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Voting system Using Ethereum Blockchain</title>
+
+    <script src="./web3/dist/web3.min.js"></script>
+    <style>
+    body {
+    background-color:#F0F0F0;
+    padding: 2em;
+    font-family: 'Raleway','Source Sans Pro', 'Arial';
+}
+.container {
+    width: 50%;
+    margin: 0 auto;
+}
+label {
+    display:block;
+    margin-bottom:10px;
+}
+input {
+    padding:10px;
+    width: 50px;
+    margin-bottom: 1em;
+}
+button {
+    margin: 2em 0;
+    padding: 1em 4em;
+    display:block;
+}
+
+#instructor {
+    padding:1em;
+    background-color:#fff;
+    margin: 1em 0;
+}
+
+#result {
+	background: #ddd;
+	padding: 10px;
+}
+
+.error {
+    color: #ff0000;
+}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <h1>Sample Voting System</h1>
+        <p id="result">...</p>
+        <h2 id="instructor">Do you think blockchain is a revolutionary technology?</h2>
+        <label for="vote_yes">
+        <input name="vote" id="vote_yes" checked="checked" type="radio" value="yes">Yes
+    	</label>
+
+        <label for="vote_no">
+        <input name="vote" id="vote_no" type="radio" value="no">No
+    	</label>
+    
+        <button id="button">Submit</button>
+        
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+    <script>
+
+       if( typeof web3 != 'undefined' ) {
+       		web3 = new Web3(web3.currentProvider);
+       } else {
+       		web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+       }
+       
+       web3.eth.defaultAccount = web3.eth.accounts[0];
+	   	
+       
+       var votingContract = web3.eth.contract([
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getVotes",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_vote",
+				"type": "string"
+			}
+		],
+		"name": "submitVote",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]);
+
+       var votingContractObj = votingContract.at("0xa5dcb8f391eb7f3dc1727a18a0fbb07fcd10107d");
+
+       votingContractObj.getVotes(function(error,result) {
+    	 if( !error) {
+    		 $("#result").html(result[0] +" out of "+(parseInt(result[0])+parseInt(result[1]))+ " found the blockchain a revolutionary technology.");
+    	 } 
+       });
+
+        $("#button").click(function(){
+        	$(this).text('Please wait...').attr('disabled',true);
+    		try {
+            
+                    var vote = $("input[name='vote']:checked").val();
+            		votingContractObj.submitVote(vote,function(error,result) {
+            		if(!error) {
+            			$("#result").text("Your vote is submitted successfully and pending for the verification. It may take few seconds.");
+            		} else {
+            			$("#result").text("Something went wrong.");
+            		}
+            		
+            		});
+
+            } catch(err) {
+                $("#result").text(err).addClass('error');
+            }
+            $("#button").text('Submit').attr('disabled',false);
+    	});
+	   
+	  
+
+    </script>
+
+</body>
+</html>
